@@ -103,6 +103,68 @@ final class URLExtensionTests: XCTestCase {
     )
   }
 
+  func testDirectoryTotalAllocatedSizeWithExcludedPaths() throws {
+    // Create a regular file
+    try createTestFile(atPath: defaultTestFileURL.path)
+
+    // Create a subfolder that will be excluded
+    let excludedDirectoryURL = URL(
+      fileURLWithPath: temporaryTestDirectoryPath
+        .appending("/Excluded")
+    )
+    try fileManager.createDirectory(atPath: excludedDirectoryURL.path)
+    try createTestFile(
+      atPath: makeTestFileURL(directoryURL: excludedDirectoryURL, componentName: TestFile.file1.rawValue).path,
+      content: String(repeating: "1", count: 5_000).data(using: .utf8)!
+    )
+
+    // Without exclusion, both files are counted
+    XCTAssertEqual(
+      try temporaryTestDirectoryURL.directoryTotalAllocatedSize(includingSubfolders: true),
+      12288
+    )
+
+    // With exclusion, only the regular file is counted
+    XCTAssertEqual(
+      try temporaryTestDirectoryURL.directoryTotalAllocatedSize(
+        includingSubfolders: true,
+        excludedPathComponents: ["Excluded"]
+      ),
+      4096
+    )
+  }
+
+  func testDirectoryTotalAllocatedSizeWithDoccExcluded() throws {
+    // Create a regular file
+    try createTestFile(atPath: defaultTestFileURL.path)
+
+    // Create a .docc subfolder with a file inside
+    let doccDirectoryURL = URL(
+      fileURLWithPath: temporaryTestDirectoryPath
+        .appending("/Documentation.docc")
+    )
+    try fileManager.createDirectory(atPath: doccDirectoryURL.path)
+    try createTestFile(
+      atPath: makeTestFileURL(directoryURL: doccDirectoryURL, componentName: TestFile.file1.rawValue).path,
+      content: String(repeating: "1", count: 5_000).data(using: .utf8)!
+    )
+
+    // Without exclusion, .docc contents are included
+    XCTAssertEqual(
+      try temporaryTestDirectoryURL.directoryTotalAllocatedSize(includingSubfolders: true),
+      12288
+    )
+
+    // With .docc excluded, only the regular file is counted
+    XCTAssertEqual(
+      try temporaryTestDirectoryURL.directoryTotalAllocatedSize(
+        includingSubfolders: true,
+        excludedPathComponents: [".docc"]
+      ),
+      4096
+    )
+  }
+
   func testDirectoryTotalAllocatedSizeWithoutIncludingSubfolders() throws {
     // create a file
     try createTestFile(atPath: defaultTestFileURL.path)

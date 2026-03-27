@@ -61,17 +61,20 @@ final class AppManager {
   private let console: Console
   private let verbose: Bool
   private let xcconfig: URL?
+  let excludedPathComponents: Set<String>
 
   init(
     fileManager: FileManager = .default,
     console: Console,
     xcconfig: URL?,
-    verbose: Bool
+    verbose: Bool,
+    excludedPathComponents: Set<String> = []
   ) {
     self.fileManager = fileManager
     self.console = console
     self.xcconfig = xcconfig
     self.verbose = verbose
+    self.excludedPathComponents = excludedPathComponents
   }
 
   func cloneEmptyApp() async throws {
@@ -143,7 +146,7 @@ final class AppManager {
   func calculateBinarySize() async throws -> SizeOnDisk {
     do {
       let url = URL(fileURLWithPath: archivedProductPath)
-      let appSize = try await url.sizeOnDisk()
+      let appSize = try await url.sizeOnDisk(excludedPathComponents: excludedPathComponents)
 
       if verbose {
         await console.lineBreakAndWrite(appSize.message)

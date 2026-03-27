@@ -47,11 +47,21 @@ public struct SwiftPackageInfo: AsyncParsableCommand {
     defaultSubcommand: FullAnalyzes.self
   )
 
-  static let subcommandsProviders: [InfoProvider] = [
-    BinarySizeProvider.binarySize(for:resolvedPackage:xcconfig:verbose:),
-    PlatformsProvider.platforms(for:resolvedPackage:xcconfig:verbose:),
-    DependenciesProvider.dependencies(for:resolvedPackage:xcconfig:verbose:)
-  ]
+  static func subcommandsProviders(excludedPathComponents: Set<String>) -> [InfoProvider] {
+    [
+      { packageDefinition, resolvedPackage, xcconfig, verbose in
+        try await BinarySizeProvider.binarySize(
+          for: packageDefinition,
+          resolvedPackage: resolvedPackage,
+          xcconfig: xcconfig,
+          verbose: verbose,
+          excludedPathComponents: excludedPathComponents
+        )
+      },
+      PlatformsProvider.platforms(for:resolvedPackage:xcconfig:verbose:),
+      DependenciesProvider.dependencies(for:resolvedPackage:xcconfig:verbose:)
+    ]
+  }
 
   public init() {}
 }
@@ -128,6 +138,19 @@ struct AllArguments: ParsableArguments {
         """
   )
   var xcconfig: URL? = nil
+
+  @Option(
+    name: [
+      .customLong("exclude-path"),
+    ],
+    parsing: .upToNextOption,
+    help: """
+        One or more path components to exclude from size calculation.
+        Files or directories whose path contains any of these components are ignored.
+        Example: --exclude-path .docc Resources
+        """
+  )
+  var excludedPaths: [String] = []
 
   @Flag(
     name: .long,

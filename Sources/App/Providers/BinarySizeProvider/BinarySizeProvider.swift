@@ -104,9 +104,10 @@ public struct BinarySizeProvider {
     for packageDefinition: PackageDefinition,
     resolvedPackage: PackageWrapper,
     xcconfig: URL?,
-    verbose: Bool
+    verbose: Bool,
+    excludedPathComponents: Set<String> = []
   ) async throws -> ProvidedInfo { // throws(InfoProviderError): typed throws only supported from macOS 15 runtime
-    let sizeMeasurer = await defaultSizeMeasurer(xcconfig, verbose)
+    let sizeMeasurer = await defaultSizeMeasurer(xcconfig, verbose, excludedPathComponents)
     var binarySize: SizeOnDisk = .zero
 
     let isProductDynamicLibrary = resolvedPackage.products
@@ -184,12 +185,12 @@ public extension BinarySizeProvider {
 }
 
 #if DEBUG
-nonisolated(unsafe) var defaultSizeMeasurer: (URL?, Bool) async -> SizeMeasuring = { xcconfig, verbose in
-  await SizeMeasurer(verbose: verbose, xcconfig: xcconfig).binarySize
+nonisolated(unsafe) var defaultSizeMeasurer: (URL?, Bool, Set<String>) async -> SizeMeasuring = { xcconfig, verbose, excludedPathComponents in
+  await SizeMeasurer(verbose: verbose, xcconfig: xcconfig, excludedPathComponents: excludedPathComponents).binarySize
 }
 #else
 @MainActor
-let defaultSizeMeasurer: (URL?, Bool) async -> SizeMeasuring = { xcconfig, verbose in
-  await SizeMeasurer(verbose: verbose, xcconfig: xcconfig).binarySize
+let defaultSizeMeasurer: (URL?, Bool, Set<String>) async -> SizeMeasuring = { xcconfig, verbose, excludedPathComponents in
+  await SizeMeasurer(verbose: verbose, xcconfig: xcconfig, excludedPathComponents: excludedPathComponents).binarySize
 }
 #endif

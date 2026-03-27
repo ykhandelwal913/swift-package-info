@@ -69,7 +69,8 @@ extension SwiftPackageInfo {
           for: packageDefinition,
           resolvedPackage: package,
           xcconfig: allArguments.xcconfig,
-          verbose: allArguments.verbose
+          verbose: allArguments.verbose,
+          excludedPathComponents: Set(allArguments.excludedPaths)
         )
       } catch {
         providedInfo = nil

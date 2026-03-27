@@ -27,6 +27,16 @@ swift-package-info platforms --for https://github.com/krzyzanowskim/CryptoSwift 
 swift-package-info binary-size --path ../project/my-framework
 ```
 
+- Exclude specific path components from size calculation (e.g., DocC documentation folders)
+```sh
+swift-package-info binary-size --for https://github.com/foo/Bar -v 1.0.0 --product Bar --exclude-path .docc
+```
+
+- Exclude multiple path components
+```sh
+swift-package-info binary-size --for https://github.com/foo/Bar -v 1.0.0 --product Bar --exclude-path .docc Resources
+```
+
 ### Report
 ```sh
 swift-package-info --for https://github.com/ReactiveX/RxSwift -v 6.0.0 --product RxSwift
@@ -81,6 +91,18 @@ swift-package-info --for https://github.com/ReactiveX/RxSwift -v 6.0.0 --product
 ## Binary size report
 Its methodology is inspired by [cocoapods-size](https://github.com/google/cocoapods-size), and thus works by comparing archives with no bitcode and ARM64 arch.
 Such a strategy has proven consistent with the size of iOS apps downloaded and installed via TestFlight.
+
+### Excluding paths from size calculation
+Use `--exclude-path` to exclude files or directories whose path contains a given component. This is useful for ignoring resources that are not shipped in the final app bundle, such as [DocC](https://www.swift.org/documentation/docc/) documentation folders (`.docc`).
+
+```sh
+swift-package-info binary-size --for <url> --exclude-path .docc
+```
+
+Multiple components can be provided space-separated:
+```sh
+swift-package-info binary-size --for <url> --exclude-path .docc Resources
+```
 
 ## Thanks
 Special thanks to [@unnamedd](https://github.com/unnamedd) for sharing his experience with [swift-tools-support-core](https://github.com/apple/swift-tools-support-core) and on how to build a pretty 👌 report.

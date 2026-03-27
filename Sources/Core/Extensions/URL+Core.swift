@@ -21,9 +21,9 @@ extension URL {
   }()
 
   @MainActor
-  public func sizeOnDisk() throws -> SizeOnDisk {
+  public func sizeOnDisk(excludedPathComponents: Set<String> = []) throws -> SizeOnDisk {
     let size = try isDirectory()
-    ? try directoryTotalAllocatedSize(includingSubfolders: true)
+    ? try directoryTotalAllocatedSize(includingSubfolders: true, excludedPathComponents: excludedPathComponents)
     : try totalFileAllocatedSize()
 
     guard let formattedByteCount = URL.fileByteCountFormatter.string(for: size) else {
@@ -40,7 +40,8 @@ extension URL {
 
   func directoryTotalAllocatedSize(
     fileManager: FileManager = .default,
-    includingSubfolders: Bool = false
+    includingSubfolders: Bool = false,
+    excludedPathComponents: Set<String> = []
   ) throws -> Int {
     let allocatedSizeWithoutSubfolders = {
       return try fileManager.contentsOfDirectory(at: self, includingPropertiesForKeys: nil).totalAllocatedSize()
@@ -51,7 +52,11 @@ extension URL {
         return try allocatedSizeWithoutSubfolders()
       }
 
-      return try urls.totalAllocatedSize()
+      let filteredURLs = urls.filter { url in
+        url.pathComponents.allSatisfy { !excludedPathComponents.contains($0) }
+      }
+
+      return try filteredURLs.totalAllocatedSize()
     }
 
     return try allocatedSizeWithoutSubfolders()

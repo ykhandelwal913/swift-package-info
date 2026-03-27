@@ -53,11 +53,12 @@ extension SwiftPackageInfo {
       // All copies to silence Swift 6 concurrency `sending` warnings
       let xcconfig = allArguments.xcconfig
       let isVerbose = allArguments.verbose
+      let excludedPaths = Set(allArguments.excludedPaths)
       let providedInfos: [ProvidedInfo] = try await withThrowingTaskGroup(
         of: ProvidedInfo.self,
         returning: [ProvidedInfo].self
       ) { taskGroup in
-        SwiftPackageInfo.subcommandsProviders.forEach { subcommandProvider in
+        SwiftPackageInfo.subcommandsProviders(excludedPathComponents: excludedPaths).forEach { subcommandProvider in
           taskGroup.addTask {
             try await subcommandProvider(
               finalPackageDefinition,

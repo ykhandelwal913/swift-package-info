@@ -31,12 +31,13 @@ final class SizeMeasurer {
   private let console: Console
   private let verbose: Bool
 
-  public convenience init(verbose: Bool, xcconfig: URL?) async {
+  public convenience init(verbose: Bool, xcconfig: URL?, excludedPathComponents: Set<String> = []) async {
     await self.init(
       appManager: .init(
         console: .default,
         xcconfig: xcconfig,
-        verbose: verbose
+        verbose: verbose,
+        excludedPathComponents: excludedPathComponents
       ),
       console: .default,
       verbose: verbose
